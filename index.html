@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@Network User</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            height: 100vh;
+            background: url('images/background-image.jpg') no-repeat center center fixed;
+            background-size: cover;
+            font-family: Arial, sans-serif;
+            color: #333;
+            animation: fadeIn 2s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .volume-control-container {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 5px;
+            padding: 5px 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+        .volume-control-container input[type="range"] {
+            width: 100px;
+        }
+        .profile-card {
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 20px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            max-width: 500px;
+            width: 90%;
+            transition: transform 0.3s ease-in-out;
+            margin-bottom: 20px;
+        }
+        .profile-card:hover {
+            transform: scale(1.05);
+        }
+        .profile-card img {
+            border-radius: 50%;
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+            margin-bottom: 20px;
+        }
+        .icons {
+            display: inline-flex;
+            align-items: center;
+            margin-left: 10px;
+        }
+        .icons svg {
+            width: 24px;
+            height: 24px;
+            margin-left: 5px;
+            cursor: pointer;
+            transition: transform 0.3s ease-in-out;
+        }
+        .icons svg:hover {
+            transform: scale(1.2);
+        }
+        .status {
+            font-size: 1.2em;
+            margin: 10px 0;
+        }
+        .typing-animation {
+            display: inline-block;
+            overflow: hidden;
+            white-space: nowrap;
+            border-right: .15em solid rgba(255, 255, 255, 0.75);
+            animation: typing 4s steps(40, end), blink-caret .75s step-end infinite;
+        }
+        @keyframes typing {
+            from { width: 0; }
+            to { width: 100%; }
+        }
+        @keyframes blink-caret {
+            from { border-color: rgba(255, 255, 255, 0.75); }
+            to { border-color: transparent; }
+        }
+        @keyframes delete {
+            from { width: 100%; }
+            to { width: 0; }
+        }
+        .delete-animation {
+            animation: delete 4s steps(40, end);
+        }
+        .progress-container {
+            position: absolute;
+            bottom: 20px;
+            width: 40%;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 5px;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+        .progress-bar {
+            height: 100%;
+            background-color: #333;
+            width: 0;
+            transition: width 0.1s;
+        }
+    </style>
+</head>
+<body>
+
+<audio id="background-music" src="music/song.mp3" preload="auto" autoplay loop></audio>
+
+<div class="volume-control-container">
+    <input type="range" id="volume-control" min="0" max="1" step="0.01" value="0.5">
+</div>
+
+<div class="profile-card">
+    <img src="images/profile-pic.jpg" alt="Profile Picture">
+    <h1>Network User
+        <div class="icons">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--!Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path d="M96 128a128 128 0 1 0 256 0A128 128 0 1 0 96 128zm94.5 200.2l18.6 31L175.8 483.1l-36-146.9c-2-8.1-9.8-13.4-17.9-11.3C51.9 342.4 0 405.8 0 481.3c0 17 13.8 30.7 30.7 30.7l131.7 0c0 0 0 0 .1 0l5.5 0 112 0 5.5 0c0 0 0 0 .1 0l131.7 0c17 0 30.7-13.8 30.7-30.7c0-75.5-51.9-138.9-121.9-156.4c-8.1-2-15.9 3.3-17.9 11.3l-36 146.9L238.9 359.2l18.6-31c6.4-10.7-1.3-24.2-13.7-24.2L224 304l-19.7 0c-12.4 0-20.1 13.6-13.7 24.2z"/></svg>
+            </svg>
+        </div>
+    </h1>
+    <p class="status" id="status">Статус: <span id="status-text"></span></p>
+    <p>Просмотров: <span id="view-count">0</span></p>
+</div>
+
+<div class="progress-container">
+    <div class="progress-bar" id="progress-bar"></div>
+</div>
+
+<script>
+    const backgroundMusic = document.getElementById('background-music');
+    const volumeControl = document.getElementById('volume-control');
+    const progressBar = document.getElementById('progress-bar');
+
+    function setCookie(name, value, days) {
+        let expires = "";
+        if (days) {
+            const date = new Date();
+            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+            expires = "; expires=" + date.toUTCString();
+        }
+        document.cookie = name + "=" + (value || "") + expires + "; path=/";
+    }
+
+    function getCookie(name) {
+        const nameEQ = name + "=";
+        const ca = document.cookie.split(';');
+        for (let i = 0; i < ca.length; i++) {
+            let c = ca[i];
+            while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+            if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+        }
+        return null;
+    }
+
+    function generateUID() {
+        return 'xxxx-xxxx-xxxx-xxxx'.replace(/[x]/g, function () {
+            return (Math.random() * 16 | 0).toString(16);
+        });
+    }
+
+    function updateViewCount() {
+        const uid = getCookie('uid') || generateUID();
+        const viewed = getCookie('viewed') === 'true';
+        let viewCount = parseInt(localStorage.getItem('viewCount')) || 0;
+
+        if (!viewed) {
+            viewCount++;
+            localStorage.setItem('viewCount', viewCount);
+            setCookie('viewed', 'true', 7); // cookie на 7 дней
+        }
+
+        document.getElementById('view-count').textContent = viewCount;
+        setCookie('uid', uid, 365); // UID на 1 год
+    }
+
+    updateViewCount();
+
+    window.onload = function() {
+        backgroundMusic.play();
+        startTypingAnimation();
+        updateProgress();
+    };
+
+    volumeControl.addEventListener('input', (event) => {
+        backgroundMusic.volume = parseFloat(event.target.value);
+    });
+
+    backgroundMusic.addEventListener('timeupdate', updateProgress);
+
+    function updateProgress() {
+        const percentage = (backgroundMusic.currentTime / backgroundMusic.duration) * 100;
+        progressBar.style.width = percentage + '%';
+    }
+
+    function startTypingAnimation() {
+        const statusText = document.getElementById('status-text');
+        const text = "Пишу код";
+
+        function typeAndDeleteText() {
+            statusText.textContent = "";
+            statusText.classList.remove('delete-animation');
+            statusText.classList.add('typing-animation');
+            statusText.style.width = "0"; // Ensure the typing animation starts correctly
+
+            let index = 0;
+
+            const typingInterval = setInterval(() => {
+                statusText.textContent += text.charAt(index);
+                index++;
+
+                if (index === text.length) {
+                    clearInterval(typingInterval);
+                    statusText.classList.remove('typing-animation');
+                    setTimeout(() => {
+                        statusText.classList.add('delete-animation');
+                        const deletingInterval = setInterval(() => {
+                            statusText.textContent = text.substring(0, index - 1);
+                            index--;
+
+                            if (index === 0) {
+                                clearInterval(deletingInterval);
+                                statusText.classList.remove('delete-animation');
+                                setTimeout(typeAndDeleteText, 1000);
+                            }
+                        }, 100); // Speed of deleting each character
+                    }, 2000); // Pause before deleting starts
+                }
+            }, 100); // Speed of typing each character
+        }
+
+        typeAndDeleteText();
+    }
+</script>
